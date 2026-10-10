@@ -1,0 +1,37 @@
+import 'dotenv/config';
+import express from 'express';
+import cors from 'cors';
+import { pool } from './db.js';
+import authRoutes from './routes/auth.js';
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+app.use('/api/auth', authRoutes);
+
+app.get('/api/saude', (req, res) => {
+  res.json({ ok: true, mensagem: 'API funcionando!' });
+});
+
+// rota de teste da conexão com o banco
+app.get('/api/banco', async (req, res) => {
+  try {
+    const resultado = await pool.query(
+      'SELECT current_database() AS banco, COUNT(*) AS total FROM funcionario'
+    );
+
+    res.json({
+      ok: true,
+      banco: resultado.rows[0].banco,
+      funcionarios: Number(resultado.rows[0].total)
+    });
+  } catch (erro) {
+    console.error(erro);
+    res.status(500).json({ ok: false, erro: erro.message });
+  }
+});
+
+const porta = Number(process.env.PORT) || 3000;
+app.listen(porta, () => {
+  console.log(`API rodando em http://localhost:${porta}`);
+});

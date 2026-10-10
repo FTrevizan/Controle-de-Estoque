@@ -1,0 +1,13 @@
+<template>
+  <router-view />
+</template>
+
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: #f4f6f9;
+  color: #1f2937;
+}
+</style>

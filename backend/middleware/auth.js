@@ -1,4 +1,3 @@
-
 import jwt from 'jsonwebtoken';
 
 // Exige um token válido no header: Authorization: Bearer <token>
@@ -17,3 +16,12 @@ export function autenticar(req, res, next) {
     return res.status(401).json({ erro: 'Sessão inválida ou expirada.' });
   }
 }
+
+// Restringe a rota a certos perfis.
+// Uso: exigirPerfil('ADMINISTRADOR', 'ALMOXARIFADO')
+export const exigirPerfil = (...perfis) => (req, res, next) => {
+  if (!perfis.includes(req.usuario?.perfil)) {
+    return res.status(403).json({ erro: 'Sem permissão para esta ação.' });
+  }
+  next();
+};

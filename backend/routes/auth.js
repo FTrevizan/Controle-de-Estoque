@@ -6,7 +6,7 @@ import { autenticar } from '../middleware/auth.js';
 
 const router = Router();
 
-// POST /api/auth/login   { login, senha }
+
 router.post('/login', async (req, res) => {
   const { login, senha } = req.body || {};
 
@@ -23,7 +23,7 @@ router.post('/login', async (req, res) => {
     );
     const func = rows[0];
 
-    // mesma mensagem para "não existe" e "senha errada"
+    // mensagem para "não existe" e "senha errada"
     const senhaOk = func && func.senha_hash &&
       (await bcrypt.compare(senha, func.senha_hash));
 

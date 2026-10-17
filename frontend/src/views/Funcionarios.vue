@@ -40,7 +40,6 @@ async function alternarAtivo(func) {
     }
 }
 
-// recarrega ao mudar o filtro, e espera o usuário parar de digitar na busca
 let espera;
 watch(busca, () => {
     clearTimeout(espera);
@@ -271,5 +270,4 @@ a.link:hover {
     font-size: .92rem;
     font-weight: 600;
 }
-
 </style>

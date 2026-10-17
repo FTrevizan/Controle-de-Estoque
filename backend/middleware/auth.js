@@ -1,6 +1,5 @@
 import jwt from 'jsonwebtoken';
 
-// Exige um token válido no header: Authorization: Bearer <token>
 export function autenticar(req, res, next) {
   const cabecalho = req.headers.authorization || '';
   const [tipo, token] = cabecalho.split(' ');

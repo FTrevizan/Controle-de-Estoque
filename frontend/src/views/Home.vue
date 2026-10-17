@@ -14,5 +14,7 @@ const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
 </template>
 
 <style scoped>
-.conteudo { padding: 24px 20px; }
+.conteudo {
+  padding: 24px 20px;
+}
 </style>

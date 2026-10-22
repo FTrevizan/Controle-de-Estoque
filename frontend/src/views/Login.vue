@@ -8,6 +8,7 @@ const login = ref('');
 const senha = ref('');
 const erro = ref('');
 const carregando = ref(false);
+const verSenha = ref(false);
 
 async function entrar() {
   erro.value = '';
@@ -29,22 +30,32 @@ async function entrar() {
 </script>
 
 <template>
-  <div class="tela">
+  <div class="pagina">
     <form class="cartao" @submit.prevent="entrar">
-      <h1>Controle de Estoque</h1>
-      <p class="sub">Materiais e EPIs</p>
+      <header class="cabecalho">
+        <h1>Controle de <span>Estoque</span></h1>
+        <p class="sub">Materiais e EPIs</p>
+      </header>
 
-      <label>Login
-        <input v-model.trim="login" autocomplete="username" autofocus />
+      <label>
+        <span class="rotulo">Login</span>
+        <input v-model.trim="login" placeholder="Digite seu login" autocomplete="username" autofocus />
       </label>
 
-      <label>Senha
-        <input v-model="senha" type="password" autocomplete="current-password" />
+      <label>
+        <span class="rotulo">Senha</span>
+        <div class="campo-senha">
+          <input v-model="senha" :type="verSenha ? 'text' : 'password'" placeholder="Digite sua senha"
+            autocomplete="current-password" />
+          <button type="button" class="olho" @click="verSenha = !verSenha">
+            {{ verSenha ? 'Ocultar' : 'Mostrar' }}
+          </button>
+        </div>
       </label>
 
       <p v-if="erro" class="erro">{{ erro }}</p>
 
-      <button :disabled="carregando || !login || !senha">
+      <button class="entrar" :disabled="carregando || !login || !senha">
         {{ carregando ? 'Entrando...' : 'Entrar' }}
       </button>
     </form>
@@ -52,75 +63,145 @@ async function entrar() {
 </template>
 
 <style scoped>
-.tela {
+.pagina {
   min-height: 100vh;
   display: grid;
   place-items: center;
-  padding: 16px;
+  padding: 24px;
+  background-color: #111827;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.05) 2px, transparent 2px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 2px, transparent 2px);
+  background-size: 56px 56px;
 }
 
 .cartao {
   width: 100%;
-  max-width: 360px;
-  background: #fff;
-  padding: 28px;
-  border-radius: 12px;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, .08);
+  max-width: 380px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 20px;
+  padding: 34px 32px 32px;
+  background: #0f1b33;
+  border: 1px solid #334155;
+  border-top: 5px solid #f59e0b;
+  border-radius: 12px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+}
+
+.cabecalho {
+  text-align: center;
 }
 
 h1 {
   margin: 0;
-  font-size: 1.4rem;
+  font-size: 1.8rem;
+  line-height: 1.15;
+  color: #ffffff;
+}
+
+h1 span {
+  color: #f59e0b;
 }
 
 .sub {
-  margin: -8px 0 4px;
-  color: #6b7280;
-  font-size: .9rem;
+  margin: 6px 0 0;
+  color: #94a3b8;
+  font-size: 0.95rem;
 }
 
 label {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  font-size: .9rem;
+  gap: 7px;
+}
+
+.rotulo {
+  font-size: 0.88rem;
   font-weight: 600;
+  color: #e5e7eb;
 }
 
-input {
-  padding: 10px 12px;
-  border: 1px solid #cbd5e1;
+.cartao input {
+  width: 100%;
+  padding: 13px 14px;
+  border: 2px solid #94a3b8;
   border-radius: 8px;
+  background: #162238;
   font-size: 1rem;
+  color: #ffffff;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-input:focus {
-  outline: 2px solid #2563a8;
-  border-color: transparent;
+.cartao input::placeholder {
+  color: #64748b;
 }
 
-button {
-  padding: 11px;
+.cartao input:hover {
+  border-color: #cbd5e1;
+}
+
+.cartao input:focus {
+  outline: none;
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.25);
+}
+
+.campo-senha {
+  position: relative;
+}
+
+.campo-senha input {
+  padding-right: 92px;
+}
+
+.olho {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
   border: 0;
-  border-radius: 8px;
-  background: #2563a8;
-  color: #fff;
-  font-size: 1rem;
+  color: #f59e0b;
+  font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-}
-
-button:disabled {
-  opacity: .5;
-  cursor: not-allowed;
+  padding: 8px;
 }
 
 .erro {
   margin: 0;
-  color: #b91c1c;
-  font-size: .9rem;
+  padding: 11px 14px;
+  background: rgba(220, 38, 38, 0.15);
+  color: #fecaca;
+  border: 1px solid rgba(248, 113, 113, 0.5);
+  border-radius: 8px;
+  font-size: 0.92rem;
+}
+
+.entrar {
+  margin-top: 4px;
+  padding: 14px;
+  border: 0;
+  border-radius: 8px;
+  background: #f59e0b;
+  color: #111827;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.05s;
+}
+
+.entrar:hover:not(:disabled) {
+  background: #d97706;
+}
+
+.entrar:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+.entrar:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 </style>

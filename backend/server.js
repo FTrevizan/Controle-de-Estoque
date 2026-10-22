@@ -6,6 +6,7 @@ import authRoutes from './routes/auth.js';
 import funcionariosRoutes from './routes/funcionarios.js';
 import gruposRoutes from './routes/grupos.js';
 import produtosRoutes from './routes/produtos.js';
+import movimentacoesRoutes from './routes/movimentacoes.js';
 
 const app = express();
 app.use(cors());
@@ -15,6 +16,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/funcionarios', funcionariosRoutes);
 app.use('/api/grupos', gruposRoutes);
 app.use('/api/produtos', produtosRoutes);
+app.use('/api/movimentacoes', movimentacoesRoutes);
 
 app.get('/api/saude', (req, res) => {
   res.json({ ok: true, mensagem: 'API funcionando!' });

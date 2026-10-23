@@ -7,6 +7,8 @@ import Grupos from './views/Grupos.vue';
 import GrupoForm from './views/GrupoForm.vue';
 import Produtos from './views/Produtos.vue';
 import ProdutoForm from './views/ProdutoForm.vue';
+import Movimentacoes from './views/Movimentacoes.vue';
+import MovimentacaoForm from './views/MovimentacoesForm.vue';
 
 const gestao = { requerLogin: true, perfis: ['ADMINISTRADOR', 'ALMOXARIFADO'] };
 
@@ -27,6 +29,12 @@ const router = createRouter({
     { path: '/produtos', name: 'produtos', component: Produtos, meta: gestao },
     { path: '/produtos/novo', name: 'produto-novo', component: ProdutoForm, meta: gestao },
     { path: '/produtos/:id', name: 'produto-editar', component: ProdutoForm, meta: gestao },
+
+
+    { path: '/movimentacoes', name: 'movimentacoes', component: Movimentacoes, meta: gestao },
+    { path: '/movimentacoes/novo', name: 'movimentacao-novo', component: MovimentacaoForm, meta: gestao },
+    { path: '/movimentacoes/:id', name: 'movimentacao-editar', component: MovimentacaoForm, meta: gestao },
+
   ],
 });
 

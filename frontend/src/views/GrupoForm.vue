@@ -10,32 +10,61 @@ const router = useRouter();
 const id = route.params.id;
 const editando = computed(() => !!id);
 
-const form = ref({ nome: '', descricao: '' });
+const form = ref({
+    produtoId: '',
+    tipo: '',
+    quantidade: 1,
+    observacao: ''
+});
+
+const produtos = ref([]);
 const erro = ref('');
 const salvando = ref(false);
 
 onMounted(async () => {
-    if (!editando.value) return;
     try {
-        const { data } = await api.get(`/grupos/${id}`);
-        form.value = { nome: data.nome, descricao: data.descricao || '' };
+        const resposta = await api.get('/produtos');
+        produtos.value = resposta.data;
+
+        if (editando.value) {
+            const { data } = await api.get(`/movimentacoes/${id}`);
+
+            form.value = {
+                produtoId: data.produtoId ?? data.produto_id ?? '',
+                tipo: data.tipo || '',
+                quantidade: data.quantidade || 1,
+                observacao: data.observacao || ''
+            };
+        }
     } catch (e) {
-        erro.value = e.response?.data?.erro || 'Não foi possível carregar o grupo.';
+        erro.value =
+            e.response?.data?.erro ||
+            'Não foi possível carregar os dados.';
     }
 });
 
 async function salvar() {
     erro.value = '';
     salvando.value = true;
+
     try {
+        const dados = {
+            ...form.value,
+            produtoId: Number(form.value.produtoId),
+            quantidade: Number(form.value.quantidade)
+        };
+
         if (editando.value) {
-            await api.put(`/grupos/${id}`, form.value);
+            await api.put(`/movimentacoes/${id}`, dados);
         } else {
-            await api.post('/grupos', form.value);
+            await api.post('/movimentacoes', dados);
         }
-        router.push({ name: 'grupos' });
+
+        router.push({ name: 'movimentacoes' });
     } catch (e) {
-        erro.value = e.response?.data?.erro || 'Não foi possível salvar.';
+        erro.value =
+            e.response?.data?.erro ||
+            'Não foi possível salvar a movimentação.';
     } finally {
         salvando.value = false;
     }
@@ -46,24 +75,51 @@ async function salvar() {
     <Topo />
 
     <main class="conteudo">
-        <h2>{{ editando ? 'Editar grupo' : 'Novo grupo' }}</h2>
+        <h2>
+            {{ editando ? 'Editar movimentação' : 'Nova movimentação' }}
+        </h2>
 
         <form class="cartao" @submit.prevent="salvar">
-            <label>Nome
-                <input v-model.trim="form.nome" required />
+            <label>
+                Produto
+                <select v-model="form.produtoId" required>
+                    <option value="">Selecione um produto</option>
+
+                    <option v-for="produto in produtos" :key="produto.id" :value="produto.id">
+                        {{ produto.nome }}
+                    </option>
+                </select>
             </label>
 
-            <label>Descrição
-                <textarea v-model.trim="form.descricao" rows="3"></textarea>
+            <label>
+                Tipo de movimentação
+                <select v-model="form.tipo" required>
+                    <option value="">Selecione o tipo</option>
+                    <option value="ENTRADA">Entrada</option>
+                    <option value="SAIDA">Saída</option>
+                </select>
+            </label>
+
+            <label>
+                Quantidade
+                <input v-model.number="form.quantidade" type="number" min="1" step="1" required />
+            </label>
+
+            <label>
+                Observação
+                <textarea v-model.trim="form.observacao" rows="3"></textarea>
             </label>
 
             <p v-if="erro" class="erro">{{ erro }}</p>
 
             <div class="botoes">
-                <button type="button" class="secundario" @click="router.push({ name: 'grupos' })">
+                <button type="button" class="secundario" @click="router.push({ name: 'movimentacoes' })">
                     Cancelar
                 </button>
-                <button :disabled="salvando">{{ salvando ? 'Salvando...' : 'Salvar' }}</button>
+
+                <button :disabled="salvando">
+                    {{ salvando ? 'Salvando...' : 'Salvar' }}
+                </button>
             </div>
         </form>
     </main>
@@ -99,7 +155,8 @@ label {
 }
 
 input,
-textarea {
+textarea,
+select {
     padding: 10px 12px;
     border: 1px solid #cbd5e1;
     border-radius: 8px;
@@ -109,7 +166,8 @@ textarea {
 }
 
 input:focus,
-textarea:focus {
+textarea:focus,
+select:focus {
     outline: 2px solid #2563a8;
     border-color: transparent;
 }

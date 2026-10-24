@@ -1,74 +1,69 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import api from '../api.js';
 import Topo from '../components/Topo.vue';
 
 const movimentacoes = ref([]);
+const produtos = ref([]);
 const busca = ref('');
-const filtro = ref('todas');
+const operacao = ref('');
+const produto = ref('');
+const de = ref('');
+const ate = ref('');
 const erro = ref('');
 const carregando = ref(false);
 
 async function carregar() {
     erro.value = '';
     carregando.value = true;
-
     try {
         const params = {};
-
-        if (busca.value.trim()) {
-            params.busca = busca.value.trim();
-        }
-
-        if (filtro.value !== 'todas') {
-            params.tipo = filtro.value;
-        }
+        if (operacao.value) params.operacao = operacao.value;
+        if (produto.value) params.produto = produto.value;
+        if (de.value) params.de = de.value;
+        if (ate.value) params.ate = ate.value;
 
         const { data } = await api.get('/movimentacoes', { params });
         movimentacoes.value = data;
     } catch (e) {
-        erro.value =
-            e.response?.data?.erro ||
-            'Não foi possível carregar as movimentações.';
+        erro.value = e.response?.data?.erro || 'Não foi possível carregar as movimentações.';
     } finally {
         carregando.value = false;
     }
 }
 
-function nomeProduto(m) {
-    return m.produto?.nome
-        || m.nome_produto
-        || m.produto_nome
-        || (m.produtoId ? `Produto #${m.produtoId}` : '—');
-}
+// busca por texto feita na própria tela (produto, código ou pessoas)
+const lista = computed(() => {
+    const termo = busca.value.trim().toLowerCase();
+    if (!termo) return movimentacoes.value;
+    return movimentacoes.value.filter((m) =>
+        [m.produto, m.codigo, m.retirou, m.responsavel]
+            .filter(Boolean)
+            .some((texto) => texto.toLowerCase().includes(termo))
+    );
+});
 
-function nomeFuncionario(m) {
-    return m.funcionario?.nome
-        || m.nome_funcionario
-        || m.funcionario_nome
-        || '—';
+function nomeProduto(m) {
+    return `${m.codigo} - ${m.produto}${m.tamanho ? ` (${m.tamanho})` : ''}`;
 }
 
 function dataFormatada(data) {
     if (!data) return '—';
-
     const valor = new Date(data);
-
-    if (Number.isNaN(valor.getTime())) return data;
-
-    return valor.toLocaleString('pt-BR');
+    return Number.isNaN(valor.getTime()) ? data : valor.toLocaleString('pt-BR');
 }
 
-let espera;
+watch([operacao, produto, de, ate], carregar);
 
-watch(busca, () => {
-    clearTimeout(espera);
-    espera = setTimeout(carregar, 300);
+onMounted(async () => {
+    try {
+        const { data } = await api.get('/produtos');
+        produtos.value = data;
+    } catch {
+        produtos.value = [];
+    }
+    carregar();
 });
-
-watch(filtro, carregar);
-
-onMounted(carregar);
 </script>
 
 <template>
@@ -77,20 +72,27 @@ onMounted(carregar);
     <main class="conteudo">
         <div class="titulo">
             <h2>Movimentações</h2>
-
-            <router-link to="/movimentacoes/novo" class="botao">
-                + Nova movimentação
-            </router-link>
+            <router-link to="/movimentacoes/novo" class="botao">+ Nova movimentação</router-link>
         </div>
 
         <div class="filtros">
-            <input v-model="busca" placeholder="Buscar produto ou funcionário" />
+            <input v-model="busca" placeholder="Buscar produto, código ou funcionário" />
 
-            <select v-model="filtro">
-                <option value="todas">Todas</option>
+            <select v-model="operacao">
+                <option value="">Entradas e saídas</option>
                 <option value="ENTRADA">Somente entradas</option>
                 <option value="SAIDA">Somente saídas</option>
             </select>
+
+            <select v-model="produto">
+                <option value="">Todos os produtos</option>
+                <option v-for="p in produtos" :key="p.id_produto" :value="p.id_produto">
+                    {{ p.codigo }} - {{ p.nome }}{{ p.tamanho ? ` (${p.tamanho})` : '' }}
+                </option>
+            </select>
+
+            <label class="data">De <input v-model="de" type="date" /></label>
+            <label class="data">Até <input v-model="ate" type="date" /></label>
         </div>
 
         <p v-if="erro" class="erro">{{ erro }}</p>
@@ -103,47 +105,32 @@ onMounted(carregar);
                         <th>Produto</th>
                         <th>Tipo</th>
                         <th>Quantidade</th>
-                        <th>Funcionário</th>
-                        <th>Observação</th>
+                        <th>Retirado por</th>
+                        <th>Registrado por</th>
+                        <th>Setor</th>
                     </tr>
                 </thead>
 
                 <tbody>
-                    <tr v-for="m in movimentacoes" :key="m.id_movimentacao ?? m.id">
-                        <td>
-                            {{ dataFormatada(
-                                m.data_movimentacao || m.data || m.created_at
-                            ) }}
-                        </td>
-
+                    <tr v-for="m in lista" :key="m.id_movimentacao">
+                        <td>{{ dataFormatada(m.data) }}</td>
                         <td>{{ nomeProduto(m) }}</td>
-
                         <td>
-                            <span :class="[
-                                'selo',
-                                m.tipo === 'ENTRADA' ? 'entrada' : 'saida'
-                            ]">
-                                {{ m.tipo || '—' }}
+                            <span :class="['selo', m.operacao === 'ENTRADA' ? 'entrada' : 'saida']">
+                                {{ m.operacao === 'ENTRADA' ? 'Entrada' : 'Saída' }}
                             </span>
                         </td>
-
                         <td>{{ m.quantidade }}</td>
-
-                        <td>{{ nomeFuncionario(m) }}</td>
-
-                        <td>{{ m.observacao || '—' }}</td>
-                    </tr>
-
-                    <tr v-if="!carregando && movimentacoes.length === 0">
-                        <td colspan="6" class="vazio">
-                            Nenhuma movimentação encontrada.
-                        </td>
+                        <td>{{ m.retirou || '—' }}</td>
+                        <td>{{ m.responsavel || '—' }}</td>
+                        <td>{{ m.setor_na_data || '—' }}</td>
                     </tr>
 
                     <tr v-if="carregando">
-                        <td colspan="6" class="vazio">
-                            Carregando movimentações...
-                        </td>
+                        <td colspan="7" class="vazio">Carregando movimentações...</td>
+                    </tr>
+                    <tr v-else-if="lista.length === 0">
+                        <td colspan="7" class="vazio">Nenhuma movimentação encontrada.</td>
                     </tr>
                 </tbody>
             </table>
@@ -154,7 +141,7 @@ onMounted(carregar);
 <style scoped>
 .conteudo {
     padding: 24px 20px;
-    max-width: 1100px;
+    max-width: 1200px;
     margin: 0 auto;
 }
 
@@ -176,6 +163,7 @@ h2 {
     gap: 10px;
     margin-bottom: 14px;
     flex-wrap: wrap;
+    align-items: center;
 }
 
 input,
@@ -187,9 +175,16 @@ select {
     background: #fff;
 }
 
-input {
+.filtros>input:first-child {
     flex: 1;
     min-width: 220px;
+}
+
+label.data {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .92rem;
 }
 
 .erro {
@@ -220,6 +215,7 @@ th {
     background: #f1f5f9;
     color: #475569;
     font-weight: 600;
+    white-space: nowrap;
 }
 
 tr+tr td {
